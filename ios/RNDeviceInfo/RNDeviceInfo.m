@@ -187,7 +187,19 @@ RCT_EXPORT_MODULE(RNDeviceInfo)
 - (NSString*) userAgent
 {
 #if TARGET_OS_TV
-    return @"not available";
+    Class webviewClass = NSClassFromString(@"UIWebView");
+    id webview = [[webviewClass alloc] initWithFrame:CGRectZero];
+    NSString* secretAgent = [webview stringByEvaluatingJavaScriptFromString:@"navigator.userAgent"];
+    
+    struct utsname systemInfo;
+    
+    uname(&systemInfo);
+    
+    NSString* deviceId = [NSString stringWithCString:systemInfo.machine
+                                            encoding:NSUTF8StringEncoding];
+    
+    return [secretAgent stringByReplacingOccurrencesOfString:@"(iPhone;"
+                                                  withString:deviceId];
 #else
     UIWebView* webView = [[UIWebView alloc] initWithFrame:CGRectZero];
     return [webView stringByEvaluatingJavaScriptFromString:@"navigator.userAgent"];
